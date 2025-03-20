@@ -21,12 +21,12 @@ class Crumb
      */
     protected $breadcrumb = [];
 
-   /**
-    * Initialize the Crumb instance.
-    *
-    * @param  array $config
-    * @return void
-    */
+    /**
+     * Initialize the Crumb instance.
+     *
+     * @param  array $config
+     * @return void
+     */
     public function __construct(array $config)
     {
         $this->config = $config;
@@ -47,8 +47,8 @@ class Crumb
         if (
             $blog === true &&
             get_option('show_on_front') === 'page' &&
-            ! empty($blog = get_option('page_for_posts')) &&
-            ! empty($this->config['blog'])
+            !empty($blog = get_option('page_for_posts')) &&
+            !empty($this->config['blog'])
         ) {
             $this->add(
                 $this->config['blog'],
@@ -64,6 +64,20 @@ class Crumb
         ]);
 
         return $this->breadcrumb;
+    }
+
+    protected function term_ancestors($term_id, $taxonomy)
+    {
+        $ancestors = get_ancestors($term_id, $taxonomy);
+        $ancestors = array_reverse($ancestors);
+
+        foreach ($ancestors as $ancestor) {
+            $ancestor = get_term($ancestor, $taxonomy);
+
+            if (!is_wp_error($ancestor) && $ancestor) {
+                $this->add($ancestor->name, get_term_link($ancestor));
+            }
+        }
     }
 
     /**
@@ -84,11 +98,59 @@ class Crumb
 
         if (
             is_home() &&
-            ! empty($this->config['blog'])
+            !empty($this->config['blog'])
         ) {
             return $this->add(
                 $this->config['blog']
             );
+        }
+
+        if (class_exists('woocommerce')) {
+            if (is_product_category()) {
+
+                // shop page
+                $this->add(
+                    get_the_title(wc_get_page_id('shop')),
+                    get_permalink(wc_get_page_id('shop')),
+                );
+
+                $current_term = $GLOBALS['wp_query']->get_queried_object();
+                $this->term_ancestors($current_term->term_id, 'product_cat');
+                return $this->add($current_term->name);
+            }
+
+            if (is_product()) {
+
+                // shop page
+                $this->add(
+                    get_the_title(wc_get_page_id('shop')),
+                    get_permalink(wc_get_page_id('shop')),
+                );
+
+                $terms = wc_get_product_terms(
+                    get_the_ID(),
+                    'product_cat',
+                    apply_filters(
+                        'woocommerce_breadcrumb_product_terms_args',
+                        array(
+                            'orderby' => 'parent',
+                            'order' => 'DESC',
+                        )
+                    )
+                );
+
+                if ($terms) {
+                    $main_term = apply_filters('woocommerce_breadcrumb_main_term', $terms[0], $terms);
+                    $this->term_ancestors($main_term->term_id, 'product_cat');
+                    $this->add($main_term->name, get_term_link($main_term));
+                }
+
+                return $this->add(
+                    get_the_title(),
+                    null,
+                    get_the_ID()
+                );
+            }
         }
 
         if (is_page()) {
@@ -202,7 +264,7 @@ class Crumb
         if (is_singular('post')) {
             $categories = get_the_category(get_the_ID());
 
-            if (! empty($categories)) {
+            if (!empty($categories)) {
                 foreach ($categories as $index => $category) {
                     $this->add(
                         $category->name,
@@ -231,7 +293,7 @@ class Crumb
             get_post_type()
         );
 
-        if (! empty($type)) {
+        if (!empty($type)) {
             $this->add(
                 $type->label,
                 get_post_type_archive_link($type->name),
