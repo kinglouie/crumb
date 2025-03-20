@@ -1,5 +1,5 @@
 {
-  "name": "log1x/crumb",
+  "name": "kinglouie/crumb",
   "type": "package",
   "license": "MIT",
   "description": "A simple WordPress breadcrumb for Sage 10.",
@@ -7,6 +7,10 @@
     {
       "name": "Brandon Nifong",
       "email": "brandon@tendency.me"
+    },
+    {
+      "name": "Matthias Hollerbach",
+      "email": "mail@matthias-hollerbach.de"
     }
   ],
   "keywords": [
@@ -16,7 +20,7 @@
     "breadcrumb"
   ],
   "support": {
-    "issues": "https://github.com/log1x/crumb/issues"
+    "issues": "https://github.com/kinglouie/crumb/issues"
   },
   "autoload": {
     "psr-4": {
