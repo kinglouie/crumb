@@ -96,6 +96,13 @@ class Crumb
             home_url()
         );
 
+        $before = apply_filters(('crumb_before'), []);
+        if (is_array($before)) {
+            foreach ($before as $item) {
+                $this->add($item['label'], $item['url']);
+            }
+        }
+
         if (
             is_home() &&
             !empty($this->config['blog'])
